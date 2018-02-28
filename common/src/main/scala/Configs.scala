@@ -5,9 +5,12 @@ import freechips.rocketchip.config.{Parameters, Config}
 import freechips.rocketchip.coreplex._
 import freechips.rocketchip.devices.tilelink.BootROMParams
 import freechips.rocketchip.rocket.{RocketCoreParams, MulDivParams, DCacheParams, ICacheParams}
+import freechips.rocketchip.system.{BaseConfig, DefaultConfig, DefaultSmallConfig, DefaultRV32Config, TinyRV32Config}
 import freechips.rocketchip.tile.{RocketTileParams, BuildCore, XLen}
 import icenet.{NICKey, NICConfig}
 import testchipip._
+
+import sifive.uart._
 
 class WithBootROM extends Config((site, here, up) => {
   case BootROMParams => BootROMParams(
@@ -20,10 +23,10 @@ class WithZynqAdapter extends Config((site, here, up) => {
   case ZynqAdapterBase => BigInt(0x43C00000L)
   case ExtMem => up(ExtMem, site).copy(idBits = 6)
   case ExtIn => up(ExtIn, site).copy(beatBytes = 4, idBits = 12)
-  case BlockDeviceKey => BlockDeviceConfig(nTrackers = 2)
-  case BlockDeviceFIFODepth => 16
-  case NetworkFIFODepth => 16
-  case NICKey => NICConfig()
+  case BlockDeviceKey => BlockDeviceConfig(nTrackers = 0) //BlockDeviceConfig(nTrackers = 2)
+  //case BlockDeviceFIFODepth => 16
+  //case NetworkFIFODepth => 16
+  //case NICKey => NICConfig()
 })
 
 class WithNMediumCores(n: Int) extends Config((site, here, up) => {
@@ -51,6 +54,46 @@ class WithNMediumCores(n: Int) extends Config((site, here, up) => {
   }
 })
 
+class WithNCustom32Cores(n: Int) extends Config((site, here, up) => {
+  case XLen => 32
+  case RocketTilesKey => {
+    val custom = RocketTileParams(
+      core = RocketCoreParams(
+        useVM = false,
+        mulDiv = Some(MulDivParams(
+          mulUnroll = 8,
+          mulEarlyOut = true,
+          divEarlyOut = true))),
+      dcache = Some(DCacheParams(
+        rowBits = site(SystemBusKey).beatBits,
+        nSets = 256, // 16Kb scratchpad
+        nWays = 1,
+        nTLBEntries = 4,
+        nMSHRs = 0,
+        blockBytes = site(CacheBlockBytes) )),
+        //scratch = Some(0x80000000L))),  // have normal mem there
+      icache = Some(ICacheParams(
+        rowBits = site(SystemBusKey).beatBits,
+        nSets = 64,
+        nWays = 1,
+        nTLBEntries = 4,
+        blockBytes = site(CacheBlockBytes) )))  
+    List.tabulate(n)(i => custom.copy(hartId = i))
+  }  
+})
+
+// memory bus needs same width as arm S_AXI for correct access
+class WithEdgeDataBitsRV32() extends Config((site, here, up) => {
+  case MemoryBusKey => up(MemoryBusKey, site).copy(beatBytes = 8)
+  
+})
+
+class WithSifivePeriphery() extends Config((site, here, up) => {
+  case PeripheryUARTKey => List(
+    UARTParams(address = 0x10013000),
+    UARTParams(address = 0x10023000))
+})
+
 class DefaultConfig extends Config(
   new WithBootROM ++ new freechips.rocketchip.system.DefaultConfig)
 class DefaultMediumConfig extends Config(
@@ -60,6 +103,13 @@ class DefaultSmallConfig extends Config(
   new WithBootROM ++ new freechips.rocketchip.system.DefaultSmallConfig)
 
 class ZynqConfig extends Config(new WithZynqAdapter ++ new DefaultConfig)
+// TinyRV32Config not working, address conflict around 0x80000000??
+class ZynqRV32Config extends Config(new WithEdgeDataBitsRV32  ++ new WithZynqAdapter ++ new WithBootROM ++ new DefaultRV32Config) 
+// use with peripherals invoked in Top
+class ZynqRV32ConfigCow extends Config(new WithEdgeDataBitsRV32 ++ new WithZynqAdapter ++ new WithBootROM ++ 
+  new WithNCustom32Cores(1) ++ new WithSifivePeriphery ++
+  new freechips.rocketchip.coreplex.WithRV32 ++ new freechips.rocketchip.system.BaseConfig) 
+
 class ZynqMediumConfig extends Config(new WithZynqAdapter ++ new DefaultMediumConfig)
 class ZynqSmallConfig extends Config(new WithZynqAdapter ++ new DefaultSmallConfig)
 

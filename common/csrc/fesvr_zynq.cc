@@ -44,9 +44,9 @@ int main(int argc, char** argv)
             blkdev = new BlockDevice(name, BLKDEV_NTAGS);
         } else if (strncmp(argv[i], "+netdev=", 8) == 0) {
             name = argv[i] + 8;
-            netsw = new NetworkSwitch(name);
-            netdev = new NetworkDevice(random_macaddr());
-            netsw->add_device(netdev);
+            //netsw = new NetworkSwitch(name);
+            //netdev = new NetworkDevice(random_macaddr());
+            //netsw->add_device(netdev);
         }
     }
 
@@ -60,7 +60,7 @@ int main(int argc, char** argv)
     if (blkdev != NULL)
         delete blkdev;
     if (netdev != NULL)
-        delete netdev;
+        //delete netdev;    
 
     return tsi.exit_code();
 }

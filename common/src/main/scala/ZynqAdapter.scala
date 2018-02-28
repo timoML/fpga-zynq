@@ -22,8 +22,8 @@ trait ZynqAdapterCoreBundle extends Bundle {
 
   val sys_reset = Output(Bool())
   val serial = Flipped(new SerialIO(SERIAL_IF_WIDTH))
-  val bdev = Flipped(new BlockDeviceIO)
-  val net = Flipped(new NICIO)
+  //val bdev = Flipped(new BlockDeviceIO)
+  //val net = Flipped(new NICIO)
 }
 
 trait ZynqAdapterCoreModule extends HasRegMap
@@ -33,11 +33,11 @@ trait ZynqAdapterCoreModule extends HasRegMap
   val w = SERIAL_IF_WIDTH
 
   val serDepth = p(SerialFIFODepth)
-  val bdevDepth = p(BlockDeviceFIFODepth)
-  val netDepth = p(NetworkFIFODepth)
+  //val bdevDepth = p(BlockDeviceFIFODepth)
+  //val netDepth = p(NetworkFIFODepth)
   val serCountBits = log2Ceil(serDepth + 1)
-  val bdevCountBits = log2Ceil(bdevDepth + 1)
-  val netCountBits = log2Ceil(netDepth + 1)
+  //val bdevCountBits = log2Ceil(bdevDepth + 1)
+  //val netCountBits = log2Ceil(netDepth + 1)
 
   val ser_out_fifo = Module(new Queue(UInt(w.W), serDepth))
   val ser_in_fifo  = Module(new Queue(UInt(w.W), serDepth))
@@ -48,36 +48,36 @@ trait ZynqAdapterCoreModule extends HasRegMap
   val sys_reset = RegInit(true.B)
   io.sys_reset := sys_reset
 
-  val bdev_req_fifo  = Module(new Queue(UInt(w.W), bdevDepth))
-  val bdev_data_fifo = Module(new Queue(UInt(w.W), bdevDepth))
-  val bdev_resp_fifo = Module(new Queue(UInt(w.W), bdevDepth))
-  val bdev_info = Reg(new BlockDeviceInfo)
-  val bdev_serdes = Module(new BlockDeviceSerdes(w))
+  //val bdev_req_fifo  = Module(new Queue(UInt(w.W), bdevDepth))
+  //val bdev_data_fifo = Module(new Queue(UInt(w.W), bdevDepth))
+  //val bdev_resp_fifo = Module(new Queue(UInt(w.W), bdevDepth))
+  //val bdev_info = Reg(new BlockDeviceInfo)
+  //val bdev_serdes = Module(new BlockDeviceSerdes(w))
 
-  bdev_serdes.io.bdev <> io.bdev
-  bdev_req_fifo.io.enq <> bdev_serdes.io.ser.req
-  bdev_data_fifo.io.enq <> bdev_serdes.io.ser.data
-  bdev_serdes.io.ser.resp <> bdev_resp_fifo.io.deq
-  io.bdev.info := bdev_info
+  //bdev_serdes.io.bdev <> io.bdev
+  //bdev_req_fifo.io.enq <> bdev_serdes.io.ser.req
+  //bdev_data_fifo.io.enq <> bdev_serdes.io.ser.data
+  //bdev_serdes.io.ser.resp <> bdev_resp_fifo.io.deq
+  //io.bdev.info := bdev_info
 
-  val net_out_fifo = Module(new Queue(UInt(w.W), netDepth))
-  val net_in_fifo = Module(new Queue(UInt(w.W), netDepth))
-  val net_serdes = Module(new NetworkSerdes(w))
+  //val net_out_fifo = Module(new Queue(UInt(w.W), netDepth))
+  //val net_in_fifo = Module(new Queue(UInt(w.W), netDepth))
+  //val net_serdes = Module(new NetworkSerdes(w))
 
-  net_serdes.io.net <> io.net
-  net_out_fifo.io.enq <> net_serdes.io.ser.out
-  net_serdes.io.ser.in <> net_in_fifo.io.deq
+  //net_serdes.io.net <> io.net
+  //net_out_fifo.io.enq <> net_serdes.io.ser.out
+  //net_serdes.io.ser.in <> net_in_fifo.io.deq
 
   val ser_in_space = (serDepth.U - ser_in_fifo.io.count)
-  val bdev_resp_space = (bdevDepth.U - bdev_resp_fifo.io.count)
-  val net_in_space = (netDepth.U - net_in_fifo.io.count)
+  //val bdev_resp_space = (bdevDepth.U - bdev_resp_fifo.io.count)
+  //val net_in_space = (netDepth.U - net_in_fifo.io.count)
 
-  val macAddr_lo = Reg(UInt(32.W))
-  val macAddr_hi = Reg(UInt(16.W))
-  io.net.macAddr := Cat(macAddr_hi, macAddr_lo)
-  io.net.rlimit.inc := 1.U
-  io.net.rlimit.period := 0.U
-  io.net.rlimit.size := 2.U
+  //val macAddr_lo = Reg(UInt(32.W))
+  //val macAddr_hi = Reg(UInt(16.W))
+  //io.net.macAddr := Cat(macAddr_hi, macAddr_lo)
+  //io.net.rlimit.inc := 1.U
+  //io.net.rlimit.period := 0.U
+  //io.net.rlimit.size := 2.U
 
   /**
    * Address Map
@@ -106,21 +106,21 @@ trait ZynqAdapterCoreModule extends HasRegMap
     0x04 -> Seq(RegField.r(serCountBits, ser_out_fifo.io.count)),
     0x08 -> Seq(RegField.w(w, ser_in_fifo.io.enq)),
     0x0C -> Seq(RegField.r(serCountBits, ser_in_space)),
-    0x10 -> Seq(RegField(1, sys_reset)),
-    0x20 -> Seq(RegField.r(w, bdev_req_fifo.io.deq)),
-    0x24 -> Seq(RegField.r(bdevCountBits, bdev_req_fifo.io.count)),
-    0x28 -> Seq(RegField.r(w, bdev_data_fifo.io.deq)),
-    0x2C -> Seq(RegField.r(bdevCountBits, bdev_data_fifo.io.count)),
-    0x30 -> Seq(RegField.w(w, bdev_resp_fifo.io.enq)),
-    0x34 -> Seq(RegField.r(bdevCountBits, bdev_resp_space)),
-    0x38 -> Seq(RegField(sectorBits, bdev_info.nsectors)),
-    0x3C -> Seq(RegField(sectorBits, bdev_info.max_req_len)),
-    0x40 -> Seq(RegField.r(w, net_out_fifo.io.deq)),
-    0x44 -> Seq(RegField.r(netCountBits, net_out_fifo.io.count)),
-    0x48 -> Seq(RegField.w(w, net_in_fifo.io.enq)),
-    0x4C -> Seq(RegField.r(netCountBits, net_in_space)),
-    0x50 -> Seq(RegField(32, macAddr_lo)),
-    0x54 -> Seq(RegField(16, macAddr_hi)))
+    0x10 -> Seq(RegField(1, sys_reset)))//,
+    //0x20 -> Seq(RegField.r(w, bdev_req_fifo.io.deq)),
+    //0x24 -> Seq(RegField.r(bdevCountBits, bdev_req_fifo.io.count)),
+    //0x28 -> Seq(RegField.r(w, bdev_data_fifo.io.deq)),
+    //0x2C -> Seq(RegField.r(bdevCountBits, bdev_data_fifo.io.count)),
+    //0x30 -> Seq(RegField.w(w, bdev_resp_fifo.io.enq)),
+    //0x34 -> Seq(RegField.r(bdevCountBits, bdev_resp_space)),
+    //0x38 -> Seq(RegField(sectorBits, bdev_info.nsectors)),
+    //0x3C -> Seq(RegField(sectorBits, bdev_info.max_req_len)),
+    //0x40 -> Seq(RegField.r(w, net_out_fifo.io.deq)),
+    //0x44 -> Seq(RegField.r(netCountBits, net_out_fifo.io.count)),
+    //0x48 -> Seq(RegField.w(w, net_in_fifo.io.enq)),
+    //0x4C -> Seq(RegField.r(netCountBits, net_in_space)),
+    //0x50 -> Seq(RegField(32, macAddr_lo)),
+    //0x54 -> Seq(RegField(16, macAddr_hi)))
 }
 
 class ZynqAdapterCore(address: BigInt, beatBytes: Int)(implicit p: Parameters)
@@ -144,8 +144,8 @@ class ZynqAdapter(address: BigInt, config: SlavePortParams)(implicit p: Paramete
     val io = IO(new Bundle {
       val sys_reset = Output(Bool())
       val serial = Flipped(new SerialIO(SERIAL_IF_WIDTH))
-      val bdev = Flipped(new BlockDeviceIO)
-      val net = Flipped(new NICIO)
+      //val bdev = Flipped(new BlockDeviceIO)
+      //val net = Flipped(new NICIO)
     })
     val axi = IO(Flipped(node.out(0)._1.cloneType))
     node.out(0)._1 <> axi
@@ -153,7 +153,7 @@ class ZynqAdapter(address: BigInt, config: SlavePortParams)(implicit p: Paramete
     val coreIO = core.module.io
     io.sys_reset := coreIO.sys_reset
     coreIO.serial <> io.serial
-    coreIO.bdev <> io.bdev
-    coreIO.net <> io.net
+    //coreIO.bdev <> io.bdev
+    //coreIO.net <> io.net
   }
 }
