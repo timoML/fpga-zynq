@@ -18,9 +18,9 @@ class Top(implicit val p: Parameters) extends Module {
   val address = p(ZynqAdapterBase)
   val config = p(ExtIn)
   
-  val target = Module(LazyModule(new FPGAZynqTop).module)
-  //println("Invoking Top with CowPeripherals code.")
-  //val target = Module(LazyModule(new FPGAZynqTop_CowPeripherals ).module)
+  //val target = Module(LazyModule(new FPGAZynqTop).module)
+  println("Invoking Top with CowPeripherals code.")
+  val target = Module(LazyModule(new FPGAZynqTop_CowPeripherals ).module)
   
   
   val adapter = Module(LazyModule(new ZynqAdapter(address, config)).module)
@@ -82,7 +82,7 @@ class FPGAZynqTop_CowPeripherals(implicit p: Parameters) extends RocketCoreplex
     with HasPeripherySerial
     //with HasPeripheryBlockDevice
     with HasPeripheryIRQPeripheral  
-    with HasPeripheryUART
+    //with HasPeripheryUART
     //with HasPeripheryIceNIC
  {
   override lazy val module = new FPGAZynqTopModule_CowPeripherals(this)
@@ -98,6 +98,5 @@ class FPGAZynqTopModule_CowPeripherals(outer: FPGAZynqTop_CowPeripherals) extend
     //with HasPeripheryBlockDeviceModuleImp
     //with HasPeripheryIceNICModuleImp
     with HasPeripheryIRQPeripheralModuleImp // _t_debug atm
-    with HasPeripheryUARTModuleImp
+    //with HasPeripheryUARTModuleImp
     //with DontTouch
-    

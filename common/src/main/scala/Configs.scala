@@ -5,7 +5,7 @@ import freechips.rocketchip.config.{Parameters, Config}
 import freechips.rocketchip.coreplex._
 import freechips.rocketchip.devices.tilelink.BootROMParams
 import freechips.rocketchip.rocket.{RocketCoreParams, MulDivParams, DCacheParams, ICacheParams}
-import freechips.rocketchip.system.{BaseConfig, DefaultConfig, DefaultSmallConfig, DefaultRV32Config, TinyRV32Config}
+import freechips.rocketchip.system.{BaseConfig, DefaultRV32Config, TinyRV32Config}
 import freechips.rocketchip.tile.{RocketTileParams, BuildCore, XLen}
 import icenet.{NICKey, NICConfig}
 import testchipip._
@@ -54,8 +54,10 @@ class WithNMediumCores(n: Int) extends Config((site, here, up) => {
   }
 })
 
+// hangs in hello32::syscall (SYS_write)
 class WithNCustom32Cores(n: Int) extends Config((site, here, up) => {
   case XLen => 32
+  //case MemoryBusKey =>  MemoryBusParams(beatBytes = 8, blockBytes = site(CacheBlockBytes))  // interface to arm must stay 64bit
   case RocketTilesKey => {
     val custom = RocketTileParams(
       core = RocketCoreParams(
@@ -70,8 +72,8 @@ class WithNCustom32Cores(n: Int) extends Config((site, here, up) => {
         nWays = 1,
         nTLBEntries = 4,
         nMSHRs = 0,
-        blockBytes = site(CacheBlockBytes) )),
-        //scratch = Some(0x80000000L))),  // have normal mem there
+        blockBytes = site(CacheBlockBytes), //)),
+        scratch = Some(0x20000000L))),  // DTIM - Flash switched compared to SiFive
       icache = Some(ICacheParams(
         rowBits = site(SystemBusKey).beatBits,
         nSets = 64,
@@ -80,6 +82,37 @@ class WithNCustom32Cores(n: Int) extends Config((site, here, up) => {
         blockBytes = site(CacheBlockBytes) )))  
     List.tabulate(n)(i => custom.copy(hartId = i))
   }  
+})
+
+class WithNCustom32Cores_2(n: Int) extends Config((site, here, up) => {
+  case XLen => 32
+  //case MemoryBusKey =>  MemoryBusParams(beatBytes = 8, blockBytes = site(CacheBlockBytes))  // interface to arm must stay 64bit
+  case RocketTilesKey => {
+    val big = RocketTileParams(
+      core   = RocketCoreParams(
+        nPerfCounters = 2, // to read eg. cache misses
+        useVM = false,      // must be false to allow scratchpad
+        mulDiv = Some(MulDivParams(
+          mulUnroll = 8,
+          mulEarlyOut = true,
+          divEarlyOut = true))),
+      dcache = Some(DCacheParams(
+        rowBits = site(SystemBusKey).beatBits,
+        nSets = 1024, 
+        nWays = 1,
+        nTLBEntries = 4,
+        nMSHRs = 0,
+        blockBytes = site(CacheBlockBytes), //)),
+        scratch = Some(0x20000000L) )),
+      icache = Some(ICacheParams(
+        rowBits = site(SystemBusKey).beatBits,
+        // activate later on
+        nSets = 256,
+        //nWays = 1,
+        //nTLBEntries = 4,
+        blockBytes = site(CacheBlockBytes) )))
+    List.tabulate(n)(i => big.copy(hartId = i))
+  } 
 })
 
 // memory bus needs same width as arm S_AXI for correct access
@@ -103,11 +136,15 @@ class DefaultSmallConfig extends Config(
   new WithBootROM ++ new freechips.rocketchip.system.DefaultSmallConfig)
 
 class ZynqConfig extends Config(new WithZynqAdapter ++ new DefaultConfig)
+// change WithNBigCore to useVM=false in coreplex.config.scala
+class ZynqConfigNoVM extends Config(new WithZynqAdapter ++ new DefaultConfig)
+
 // TinyRV32Config not working, address conflict around 0x80000000??
+// This ZynqRV32Config is tested and working!
 class ZynqRV32Config extends Config(new WithEdgeDataBitsRV32  ++ new WithZynqAdapter ++ new WithBootROM ++ new DefaultRV32Config) 
 // use with peripherals invoked in Top
 class ZynqRV32ConfigCow extends Config(new WithEdgeDataBitsRV32 ++ new WithZynqAdapter ++ new WithBootROM ++ 
-  new WithNCustom32Cores(1) ++ new WithSifivePeriphery ++
+  new WithNCustom32Cores_2(1) ++ //new WithSifivePeriphery ++
   new freechips.rocketchip.coreplex.WithRV32 ++ new freechips.rocketchip.system.BaseConfig) 
 
 class ZynqMediumConfig extends Config(new WithZynqAdapter ++ new DefaultMediumConfig)
