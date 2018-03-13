@@ -25,7 +25,7 @@ _hang:
   csrw mtvec, a0
   li a0, 8 // MIE or MSIP bit
   csrw mie, a0 // set only MSIP in mie CSR
-  csrw mideleg, zero // no delegation
+  //csrw mideleg, zero // no delegation, crash if useVM=false set
   csrs mstatus, a0 // set MIE in mstatus CSR
 wfi_loop:
   wfi
