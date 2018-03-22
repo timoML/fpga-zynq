@@ -23,6 +23,11 @@ module rocketchip_wrapper
     FIXED_IO_ps_clk,
     FIXED_IO_ps_porb,
     FIXED_IO_ps_srstb,
+    // _t_dev, for routing sifive uart out to header via xdc file
+    uart0_rxd_out,
+    uart0_txd_in,
+    uart1_rxd_out,
+    uart1_txd_in,
 `ifndef differential_clock
     clk);
 `else
@@ -52,6 +57,11 @@ module rocketchip_wrapper
   inout FIXED_IO_ps_clk;
   inout FIXED_IO_ps_porb;
   inout FIXED_IO_ps_srstb;
+
+  inout uart0_rxd_out;
+  inout uart0_txd_in;
+  inout uart1_rxd_out;
+  inout uart1_txd_in;
 
 `ifndef differential_clock
   input clk;
@@ -136,6 +146,84 @@ module rocketchip_wrapper
   wire host_clk;
   wire gclk_i, gclk_fbout, host_clk_i, mmcm_locked;
 
+  // _t_dev, for routing sifive uart out to header 
+  // compare to sifive freedom arty fe310 
+  // IOBUF for uart0 tx
+  wire  IOBUF_1_help_2; // aka sifive _t72
+  wire  IOBUF_1_I;
+  wire  IOBUF_1_O;
+  wire  IOBUF_1_help_1; // aka sifive _t80
+  wire  IOBUF_1_help_o_ie;
+  // _o_valid driven by rocket to 1
+
+  // IOBUF for uart0 rx
+  wire  IOBUF_2_help_2;
+  wire  IOBUF_2_I;
+  wire  IOBUF_2_O;
+  wire  IOBUF_2_help_1; // aka sifive _t77
+  wire  IOBUF_2_help_o_ie;
+
+  // IOBUF for uart1 rx
+  wire  IOBUF_3_help_2;
+  wire  IOBUF_3_I;
+  wire  IOBUF_3_O;
+  wire  IOBUF_3_help_1; 
+  wire  IOBUF_3_help_o_ie;
+
+  // IOBUF for uart1 rx
+  wire  IOBUF_4_help_2;
+  wire  IOBUF_4_I;
+  wire  IOBUF_4_O;
+  wire  IOBUF_4_help_1; 
+  wire  IOBUF_4_help_o_ie;
+
+  // logic to wire up 
+  assign IOBUF_1_help_1 = IOBUF_1_O & IOBUF_1_help_o_ie;
+  assign IOBUF_1_T = ~ IOBUF_1_help_2;
+
+  assign IOBUF_2_help_1 = IOBUF_2_O & IOBUF_2_help_o_ie;
+  assign IOBUF_2_T = ~ IOBUF_2_help_2;
+
+  assign IOBUF_3_help_1 = IOBUF_3_O & IOBUF_3_help_o_ie;
+  assign IOBUF_3_T = ~ IOBUF_3_help_2;
+
+  assign IOBUF_4_help_1 = IOBUF_4_O & IOBUF_4_help_o_ie;
+  assign IOBUF_4_T = ~ IOBUF_4_help_2;
+
+  // uart0_txd
+  IOBUF IOBUF_1 (
+    .T(IOBUF_1_T),
+    .I(IOBUF_1_I),
+    .IO(uart0_txd_in),
+    .O(IOBUF_1_O)
+  );
+
+  // uart0_rxd
+  IOBUF IOBUF_2 (
+    .T(IOBUF_2_T),
+    .I(IOBUF_2_I),
+    .IO(uart0_rxd_out),
+    .O(IOBUF_2_O)
+  );
+
+  // uart1_txd
+  IOBUF IOBUF_3 (
+    .T(IOBUF_3_T),
+    .I(IOBUF_3_I),
+    .IO(uart1_txd_in),
+    .O(IOBUF_3_O)
+  );
+
+  // uart1_rxd
+  IOBUF IOBUF_4 (
+    .T(IOBUF_4_T),
+    .I(IOBUF_4_I),
+    .IO(uart1_rxd_out),
+    .O(IOBUF_4_O)
+  );
+  
+  
+
   system system_i
        (.DDR_addr(DDR_addr),
         .DDR_ba(DDR_ba),
@@ -159,6 +247,7 @@ module rocketchip_wrapper
         .FIXED_IO_ps_clk(FIXED_IO_ps_clk),
         .FIXED_IO_ps_porb(FIXED_IO_ps_porb),
         .FIXED_IO_ps_srstb(FIXED_IO_ps_srstb),
+
         // master AXI interface (zynq = master, fpga = slave)
         .M_AXI_araddr(M_AXI_araddr),
         .M_AXI_arburst(M_AXI_arburst), // burst type
@@ -343,7 +432,34 @@ module rocketchip_wrapper
    .io_mem_axi_r_bits_resp (S_AXI_rresp),
    .io_mem_axi_r_bits_id (S_AXI_rid),
    .io_mem_axi_r_bits_data (S_AXI_rdata),
-   .io_mem_axi_r_bits_last (S_AXI_rlast)
+   .io_mem_axi_r_bits_last (S_AXI_rlast),
+   // _t_dev sifive uart, connect Top with wrapper
+   // OLD, when uart ports instead of IOBUF out of rocket
+   //.io_uart_0_txd (uart0_txd_in),
+   //.io_uart_0_rxd (uart0_rxd_out)
+   //.io_uart_1_txd(io_uart_1_txd),
+   //.io_uart_1_rxd(io_uart_1_rxd)
+   // NEW, connect to IOBUF pins in rocket
+   // IOBUF1 uart0_txd
+   .io_iobuf_uart0_txd_i_ival(IOBUF_1_help_1),
+   .io_iobuf_uart0_txd_o_oval(IOBUF_1_I),
+   .io_iobuf_uart0_txd_o_oe(IOBUF_1_help_2),
+   .io_iobuf_uart0_txd_o_ie(IOBUF_1_help_o_ie),
+   // IOBUF2 uart0_rxd
+   .io_iobuf_uart0_rxd_i_ival(IOBUF_2_help_1),
+   .io_iobuf_uart0_rxd_o_oval(IOBUF_2_I),
+   .io_iobuf_uart0_rxd_o_oe(IOBUF_2_help_2),
+   .io_iobuf_uart0_rxd_o_ie(IOBUF_2_help_o_ie),
+    // IOBUF3 uart1_txd
+   .io_iobuf_uart1_txd_i_ival(IOBUF_3_help_1),
+   .io_iobuf_uart1_txd_o_oval(IOBUF_3_I),
+   .io_iobuf_uart1_txd_o_oe(IOBUF_3_help_2),
+   .io_iobuf_uart1_txd_o_ie(IOBUF_3_help_o_ie),
+    // IOBUF4 uart1_rxd
+   .io_iobuf_uart1_rxd_i_ival(IOBUF_4_help_1),
+   .io_iobuf_uart1_rxd_o_oval(IOBUF_4_I),
+   .io_iobuf_uart1_rxd_o_oe(IOBUF_4_help_2),
+   .io_iobuf_uart1_rxd_o_ie(IOBUF_4_help_o_ie)
   );
 `ifndef differential_clock
   IBUFG ibufg_gclk (.I(clk), .O(gclk_i));
@@ -401,5 +517,7 @@ module rocketchip_wrapper
     .PWRDWN(1'b0),
     .RST(1'b0),
     .CLKFBIN(gclk_fbout));
+
+ 
 
 endmodule
