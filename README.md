@@ -63,8 +63,13 @@ Building ARM binaries
 In theory, the binaries running on the arm side of zynq (`fesvr-zynq` + `libicenet.so` + `libfesvr.so`) might be compatible with rv32 code. (As the arm side is untouched.)
 To test whether that holds true for you, you may skip this section and
 try running a simple test program described in the [next section](#programs).
+To this end, just use the default fpga-zynq binaries packed in the ramdisk.
+
 However, I had to recompile fesvr to get stuff running.
-If you don't see the expected output, consider doing this, too. 
+If you don't see the expected output, you have two options:
+
+1. Try the pre-built binaries in `common/bin`. They do not support any blkdev or net functionality. 
+2. Go on with this section and build from source.
 
 Be aware that there are 2 different versions to be built:
 
