@@ -57,7 +57,6 @@ class WithNMediumCores(n: Int) extends Config((site, here, up) => {
 
 class WithNCustom32Cores(n: Int) extends Config((site, here, up) => {
   case XLen => 32
-  //case MemoryBusKey =>  MemoryBusParams(beatBytes = 8, blockBytes = site(CacheBlockBytes))  // interface to arm must stay 64bit
   case RocketTilesKey => {
     val big = RocketTileParams(
       core   = RocketCoreParams(
@@ -86,10 +85,9 @@ class WithNCustom32Cores(n: Int) extends Config((site, here, up) => {
   } 
 })
 
-// memory bus needs same width as zynq arm S_AXI for correct access
+// memory bus needs same width (64 bit) as zynq arm S_AXI for correct access
 class WithEdgeDataBitsRV32() extends Config((site, here, up) => {
   case MemoryBusKey => up(MemoryBusKey, site).copy(beatBytes = 8)
-  
 })
 
 class WithSifivePeriphery() extends Config((site, here, up) => {
@@ -107,13 +105,14 @@ class DefaultSmallConfig extends Config(
   new WithBootROM ++ new freechips.rocketchip.system.DefaultSmallConfig)
 
 class ZynqConfig extends Config(new WithZynqAdapter ++ new DefaultConfig)
-// change WithNBigCore to useVM=false in coreplex.config.scala
-class ZynqConfigNoVM extends Config(new WithZynqAdapter ++ new DefaultConfig)
 
-// TinyRV32Config not working, address conflict around 0x80000000??
-// This ZynqRV32Config is tested and working!
-class ZynqRV32Config extends Config(new WithEdgeDataBitsRV32  ++ new WithZynqAdapter ++ new WithBootROM ++ new DefaultRV32Config) 
-// use with peripherals invoked in Top
+
+// These ZynqRV32Configs are tested and working!
+class ZynqRV32Config extends Config(new WithEdgeDataBitsRV32  ++ new WithZynqAdapter ++ new WithBootROM ++ new DefaultRV32Config)
+ 
+// use with peripherals invoked in Top, integrates:
+// - Sifive UART block routed to ZC706 header J58 (see zc706/src/constrs)
+// - IrqTestperipheral for programable IRQs
 class ZynqRV32ConfigCow extends Config(new WithEdgeDataBitsRV32 ++ new WithZynqAdapter ++ new WithBootROM ++ 
   new WithNCustom32Cores(1) ++ new WithSifivePeriphery ++
   new freechips.rocketchip.coreplex.WithRV32 ++ new freechips.rocketchip.system.BaseConfig) 

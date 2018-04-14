@@ -16,7 +16,7 @@ import sifive.gpio._
 case object ZynqAdapterBase extends Field[BigInt]
 
 //-------------------------------------------------------------------------
-// _t_dev sifive PinGen
+// Sifive PinGen
 //-------------------------------------------------------------------------
 
 object PinGen {
@@ -109,7 +109,6 @@ class FPGAZynqTopModule(outer: FPGAZynqTop) extends RocketCoreplexModule(outer)
 
 
 /**
-  Under development, DO NOT USE PRODUCTIVELY
   Invoke in TestHarness.scala and here::Top
 **/
 class FPGAZynqTop_CowPeripherals(implicit p: Parameters) extends RocketCoreplex
@@ -136,6 +135,6 @@ class FPGAZynqTopModule_CowPeripherals(outer: FPGAZynqTop_CowPeripherals) extend
     with HasPeripherySerialModuleImp
     //with HasPeripheryBlockDeviceModuleImp
     //with HasPeripheryIceNICModuleImp
-    with HasPeripheryIRQPeripheralModuleImp // _t_debug atm
+    with HasPeripheryIRQPeripheralModuleImp 
     with HasPeripheryUARTModuleImp
     //with DontTouch
