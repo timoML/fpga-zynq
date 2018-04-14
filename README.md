@@ -24,6 +24,7 @@ If you don't need to change anything in rocket chip, the following steps
 will provide you with all necessary files to instatiate a rv32 core on 
 the fpga. Please note that this has been tested with the zc706 board only
 and could cause errors on other boards.
+There is also a precompiled bitstream (and its `Config.scala` file) available in `zc706/fpga-images-zc706-rv32Cow`. This build also includes a debug core to chipscope some signals (see `debug_nets.ltx`).
 
 First, source the following to set the environment for Xilinx Vivado and
 to obtain the license.

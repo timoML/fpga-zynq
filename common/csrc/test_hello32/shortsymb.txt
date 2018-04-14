@@ -1,0 +1,71 @@
+
+hello_ima.elf:     file format elf32-littleriscv
+
+SYMBOL TABLE:
+80000000 l    d  .text.init	00000000 .text.init
+80001000 l    d  .tohost	00000000 .tohost
+80001048 l    d  .text	00000000 .text
+800025fc l    d  .text.startup	00000000 .text.startup
+80002650 l    d  .rodata.str1.4	00000000 .rodata.str1.4
+800026a0 l    d  .rodata	00000000 .rodata
+800028f8 l    d  .eh_frame	00000000 .eh_frame
+80002948 l    d  .sbss	00000000 .sbss
+80002980 l    d  .tbss	00000000 .tbss
+00000000 l    d  .comment	00000000 .comment
+00000000 l    d  .debug_info	00000000 .debug_info
+00000000 l    d  .debug_abbrev	00000000 .debug_abbrev
+00000000 l    d  .debug_loc	00000000 .debug_loc
+00000000 l    d  .debug_aranges	00000000 .debug_aranges
+00000000 l    d  .debug_ranges	00000000 .debug_ranges
+00000000 l    d  .debug_line	00000000 .debug_line
+00000000 l    d  .debug_str	00000000 .debug_str
+00000000 l    df *ABS*	00000000 /tmp/ccGQaNiu.o
+800000e0 l       .text.init	00000000 trap_entry
+00000000 l    df *ABS*	00000000 hello.c
+00000000 l    df *ABS*	00000000 syscalls.c
+80001048 l     F .text	00000519 vprintfmt
+80001564 l     F .text	00000015 sprintf_putch.2876
+8000157c l     F .text	0000008d syscall.constprop.2
+00000040 l       .tbss	00000004 buflen.2762
+80002950 l     O .sbss	00000008 counters
+80002948 l     O .sbss	00000008 counter_names
+00000000 l       .tbss	00000040 buf.2761
+00000000 l    df *ABS*	00000000 libgcc2.c
+00000000 l    df *ABS*	00000000 libgcc2.c
+00000000 l    df *ABS*	00000000 libgcc2.c
+00000000 l    df *ABS*	00000000 libgcc2.c
+8000160c g     F .text	00000071 putchar
+80001b0c g     F .text	00000019 strcpy
+80001744 g     F .text	0000003d printstr
+800017f0 g     F .text	00000051 printf
+80003148 g       .eh_frame	00000000 __global_pointer$
+80001b28 g     F .text	00000085 atol
+800018b4 g     F .text	00000059 memcpy
+800016fc  w    F .text	0000001d handle_trap
+800022a6 g     F .text	00000353 .hidden __umoddi3
+80002980 g       .tbss	00000000 _tls_data
+80001f46 g     F .text	0000035d .hidden __udivdi3
+80001728 g     F .text	00000019 abort
+8000196c g     F .text	00000115 _init
+80001680 g     F .text	00000059 setStats
+80001aac g     F .text	00000035 strnlen
+80000000 g       .text.init	00000000 _start
+80001910 g     F .text	00000059 memset
+800025fc g     F .text.startup	00000021 main
+80001ae4 g     F .text	00000025 strcmp
+80001844 g     F .text	0000006d sprintf
+800027f8 g     O .rodata	00000100 .hidden __clz_tab
+80001790 g     F .text	0000005d printhex
+00000000 g       .tbss	00000000 _tdata_end
+80002980 g       .sbss	00000000 _end
+80001040 g       .tohost	00000000 fromhost
+00000000 g       .tbss	00000000 _tdata_begin
+80001000 g       .tohost	00000000 tohost
+8000171c g     F .text	00000009 exit
+800016dc g     F .text	0000001d tohost_exit
+80001bb4 g     F .text	0000038f .hidden __moddi3
+00000044 g       .tbss	00000000 _tbss_end
+80001a84 g     F .text	00000025 strlen
+80001784  w    F .text	00000009 thread_entry
+
+
